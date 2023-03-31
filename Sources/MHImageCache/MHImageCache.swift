@@ -42,9 +42,9 @@ public enum ImageFrom{
 
 public typealias ImageLoadCompleted = (_ image: UIImage?, _ isCompleted: Bool, _ error: Error?)->()
 
-open class ImageCache: NSObject{
+open class MHImageCache: NSObject{
 
-    static let work = ImageCache()
+    static let work = MHImageCache()
 
     private var imageCache: NSCache = NSCache<AnyObject, AnyObject>() //(key String, UIImage)
     private var loadedOperations: NSCache = NSCache<AnyObject, AnyObject>()
@@ -128,19 +128,19 @@ open class ImageCache: NSObject{
 
 }
 
-enum ImageLoadError: Error{
+public enum ImageLoadError: Error{
     case pathError
     case loadError
 }
 
-class ImageOperation: Operation{
+fileprivate class ImageOperation: Operation{
 
     let imageFrom: ImageFrom
-    let ic: ImageCache
+    let ic: MHImageCache
     let type: ImageType
     var completionCallback: ImageLoadCompleted?
 
-    init(imageFrom: ImageFrom, ic: ImageCache, type: ImageType = .png, completionCallback: @escaping ImageLoadCompleted){
+    init(imageFrom: ImageFrom, ic: MHImageCache, type: ImageType = .png, completionCallback: @escaping ImageLoadCompleted){
         self.imageFrom = imageFrom
         self.ic = ic
         self.type = type
