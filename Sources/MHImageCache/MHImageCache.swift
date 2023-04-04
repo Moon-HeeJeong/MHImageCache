@@ -61,7 +61,7 @@ open class MHImageCache: NSObject{
     public func loadImage(imageFrom: ImageFrom, type: ImageType = .png, completionCallback: @escaping ImageLoadCompleted){
         
         guard !self.isExistingOperation(key: imageFrom.name) else{
-            completionCallback(nil, false, nil)
+            completionCallback(nil, false, nil)//
             return
         }
 
