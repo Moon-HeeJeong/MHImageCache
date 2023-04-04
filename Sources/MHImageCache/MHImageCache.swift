@@ -17,17 +17,17 @@ public enum ImageType {
 
 public enum ImageFrom{
     
-    case folder(folderPath: String, imgName: String)
+    case folder(fileDirectory: String, imgName: String)
     case url(imgUrl: String)
 
-    public var path: String{
-        switch self{
-        case .folder(let folderPath, let imgName):
-            return folderPath + imgName
-        case .url(let imgUrl):
-            return imgUrl
-        }
-    }
+//    public var path: String{
+//        switch self{
+//        case .folder(let fileDirectory, let imgName):
+//            return fileDirectory+"/"+imgName
+//        case .url(let imgUrl):
+//            return imgUrl
+//        }
+//    }
 
     public var name: String{
         switch self{
@@ -131,6 +131,15 @@ open class MHImageCache: NSObject{
 public enum ImageLoadError: Error{
     case pathError
     case loadError
+    
+    var desc: String{
+        switch self {
+        case .pathError:
+            return "path error"
+        case .loadError:
+            return "load error"
+        }
+    }
 }
 
 fileprivate class ImageOperation: Operation{
@@ -148,7 +157,7 @@ fileprivate class ImageOperation: Operation{
     }
 
     override func main() {
-
+        
         guard !self.isCancelled else{
             return
         }
@@ -156,38 +165,49 @@ fileprivate class ImageOperation: Operation{
         var error: ImageLoadError?
 
         let image: UIImage? = {
-            if let imageCache = self.ic.existImageCache(key:  self.imageFrom.name){ //저장된 캐시가 있을 떄
+            if let imageCache = self.ic.existImageCache(key: self.imageFrom.name){ //저장된 캐시가 있을 떄
                 return imageCache
             }else {
                 var img: UIImage?
                 
                 switch self.imageFrom{
                     
-                case .folder(_, let imgName): //로컬
-                    guard let filePath = Bundle.main.path(forResource: self.imageFrom.path, ofType: self.type.extentionName) else{
+                case .folder(let fileDirectory, let imgName): //로컬
+    
+                    guard let path = Bundle.path(forResource: imgName, ofType: self.type.extentionName, inDirectory: fileDirectory) else{
                         error = .pathError
-                        print("ERROR : \(imgName) load fail")
+                        print("ERROR :: \(String(describing: error?.desc ?? "")) ==> \(imgName)")
                         return img
                     }
                     
-                    if let image = UIImage(named: filePath){
+                    if let image = UIImage(named: path){
                         self.ic.saveCache(key: imgName, image)
                         img = image
                     }else{
                         error = .loadError
-                        print("ERROR : \(imgName) load fail")
+                        print("ERROR :: \(String(describing: error?.desc ?? "")) ==> \(imgName)")
                      }
                     
                 case .url(let imgUrlStr): //url
-                    let imageUrl = URL(string: imgUrlStr)!
-                    let imgData = try? Data(contentsOf: imageUrl)
 
-                    if let image = UIImage(data: imgData!){
+                    guard let imageUrl = URL(string: imgUrlStr) else{
+                        error = .pathError
+                        print("ERROR :: \(String(describing: error?.desc ?? "")) ==> \(imgUrlStr)")
+                        return img
+                    }
+                    
+                    guard let imgData = try? Data(contentsOf: imageUrl) else{
+                        error = .loadError
+                        print("ERROR :: \(String(describing: error?.desc ?? "")) ==> \(imgUrlStr)")
+                        return img
+                    }
+
+                    if let image = UIImage(data: imgData){
                         self.ic.saveCache(key: imgUrlStr, image)
                         img = image
                     }else{
                         error = .loadError
-                        print("ERROR : \(imgUrlStr) load fail")
+                        print("ERROR :: \(String(describing: error?.desc ?? "")) ==> \(imgUrlStr)")
                     }
                 }
                 return img
