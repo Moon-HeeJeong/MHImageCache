@@ -76,6 +76,7 @@ open class MHImageCache: NSObject{
         
         for i in 0..<imageFrom.count{
             guard !self.isExistingOperation(key: imageFrom[i].name) else{
+                isLoadedCount += 1
                 return
             }
             
